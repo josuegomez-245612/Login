@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.login.ui.theme.LoginTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,18 +29,16 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
-            var screenState by remember {
-                mutableStateOf(if (prefs.isLoggedIn()) "HOME" else "LOGIN")
-            }
+            val scope = rememberCoroutineScope()
+            val isLoggedIn by prefs.isLoggedIn.collectAsState(initial = false)
 
-            if (screenState == "LOGIN") {
+            if (!isLoggedIn) {
 
                 LoginScreen(
                     onLoginClick = {
-
-                        prefs.saveLoginStatus(true)
-
-                        screenState = "HOME"
+                        scope.launch {
+                            prefs.saveLoginStatus(true)
+                        }
                     }
                 )
 
@@ -48,10 +46,9 @@ class MainActivity : ComponentActivity() {
 
                 HomeScreen(
                     onLogoutClick = {
-
-                        prefs.logout()
-
-                        screenState = "LOGIN"
+                        scope.launch {
+                            prefs.logout()
+                        }
                     }
                 )
             }
